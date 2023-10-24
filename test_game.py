@@ -2,7 +2,12 @@ from evns.GymSnakeEnv import SnakeEnv, ACTION
 import numpy as np
 
 if __name__ == '__main__':
-    env = SnakeEnv(render_mode="human", size=20)
+
+    with open('./boards/board_002.txt', 'r') as file:
+        board = file.read().splitlines()
+
+    env = SnakeEnv(render_mode="human", import_board=board)
+    # env = SnakeEnv(render_mode="human", size=10)
 
     terminated = False
     truncated = False

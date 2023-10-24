@@ -2,6 +2,7 @@ import gymnasium as gym
 from gym import spaces
 import pygame
 import numpy as np
+import random
 
 DIRECTION = {
     "RIGHT": 0,
@@ -17,15 +18,19 @@ ACTION = {
 }
 
 class SnakeEnv(gym.Env):
-    metadata = {"render_modes": ["human"], "render_fps": 40}
+    metadata = {"render_modes": ["human"], "render_fps": 4}
+    size = 10  # The size of the square grid
+    window_size = 512  # The size of the PyGame window
+    walls = []  # cords of the wall
     num_of_steps = 0
     terminated = False
     truncated = False
 
-    def __init__(self, render_mode=None, size=10):
-        self.size = size  # The size of the square grid
-        self.window_size = 512  # The size of the PyGame window
-        self.board = 
+    def __init__(self, render_mode=None, size=10, import_board=None):
+        if import_board is None:
+            self.size = size  # The size of the square grid
+        else:
+            self.import_board(import_board)
 
         self.observation_space = spaces.Space(
             {
@@ -43,6 +48,14 @@ class SnakeEnv(gym.Env):
         self.window = None
         self.clock = None
 
+    def import_board(self, board):
+        self.size = len(board[0])
+
+        for i, row in enumerate(board):
+            for j, char in enumerate(row):
+                if char == '#':
+                    self.walls.append(np.array([i, j]))
+
     def _get_obs(self):
         return {"head": self._head_location,
                 "body": self._body_location,
@@ -54,7 +67,6 @@ class SnakeEnv(gym.Env):
         return {"distance": np.linalg.norm(self._head_location - self._fruit_location, ord=1)}
 
     def reset(self, seed=None, options=None):
-        # We need the following line to seed self.np_random
         super().reset(seed=seed)
 
         self._reset_data()
@@ -75,15 +87,29 @@ class SnakeEnv(gym.Env):
 
     def _reset_snake_position(self):
         self._head_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        while any(np.array_equal(self._head_location, wall) for wall in self.walls):
+            self._head_location = self.np_random.integers(0, self.size, size=2, dtype=int)
         self._body_location = []
         self._body_location.append(self._head_location)
         self._head_direction = DIRECTION["RIGHT"]
 
     def _reset_fruit_position(self):
-        # sample the target's location randomly until it does not coincide with the snake's body
-        self._fruit_location = self._head_location
-        while any(np.array_equal(self._fruit_location, snake_body) for snake_body in self._body_location):
-            self._fruit_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        # # sample the target's location randomly until it does not coincide with the snake's body
+        # self._fruit_location = self._head_location
+        # while any(np.array_equal(self._fruit_location, snake_body) for snake_body in self._body_location):
+        #     while any(np.array_equal(self._fruit_location, wall) for wall in self.walls):
+        #         self._fruit_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        # Create a list of valid fruit positions
+        valid_positions = []
+        for x in range(self.size):
+            for y in range(self.size):
+                position = np.array([x, y])
+                if not any(np.array_equal(position, snake_body) for snake_body in self._body_location) and \
+                        not any(np.array_equal(position, wall) for wall in self.walls):
+                    valid_positions.append(position)
+
+        # Choose a random valid position for the fruit
+        self._fruit_location = random.choice(valid_positions)
 
     def step(self, action):
         self.num_of_steps += 1
@@ -121,16 +147,10 @@ class SnakeEnv(gym.Env):
         if any(np.array_equal(self._head_location, body) for body in self._body_location[1:]):
             self.reward -= 100
             return True
-        if self.position_out_of_borders(self._head_location):
+        if any(np.array_equal(self._head_location, wall) for wall in self.walls):
             self.reward -= 100
             return True
         return False
-
-    def position_out_of_borders(self, position) -> bool:
-        return (position[0] < 0) \
-            or (position[0] > self.size - 1) \
-            or (position[1] < 0)\
-            or (position[1] > self.size - 1)
 
     def change_direction_based_on_action(self, direction, action) -> int:
         if action != ACTION["DO_NOTHING"]:
@@ -212,22 +232,36 @@ class SnakeEnv(gym.Env):
             pix_square_size / 3,
         )
 
+        # draw walls
+        for wall in self.walls:
+            pygame.draw.rect(
+                canvas,
+                (0, 0, 255),
+                pygame.Rect(
+                    pix_square_size * wall,
+                    (pix_square_size, pix_square_size),
+                ),
+            )
+
         # grid lines
         for x in range(self.size + 1):
+            # horizontal lines
             pygame.draw.line(
                 canvas,
                 (222, 235, 255),
                 (0, pix_square_size * x),
                 (self.window_size, pix_square_size * x),
-                width=3,
+                width=2,
             )
+            # vertical lines
             pygame.draw.line(
                 canvas,
                 (222, 235, 255),
                 (pix_square_size * x, 0),
                 (pix_square_size * x, self.window_size),
-                width=3,
+                width=2,
             )
+
 
         if self.render_mode == "human":
             self.window.blit(canvas, canvas.get_rect())
