@@ -11,6 +11,14 @@ DIRECTION = {
     "DOWN": 3
 }
 
+DIRECTION_WSAD = {
+    "W": DIRECTION["UP"],
+    "S": DIRECTION["DOWN"],
+    "A": DIRECTION["LEFT"],
+    "D": DIRECTION["RIGHT"],
+    "R": None  # for random
+}
+
 ACTION = {
     "TURN_LEFT": 0,
     "DO_NOTHING": 1,
@@ -22,6 +30,7 @@ class SnakeEnv(gym.Env):
     size = 10  # The size of the square grid
     window_size = 512  # The size of the PyGame window
     walls = []  # cords of the wall
+    start_position = {}
     num_of_steps = 0
     terminated = False
     truncated = False
@@ -55,6 +64,9 @@ class SnakeEnv(gym.Env):
             for j, char in enumerate(row):
                 if char == '#':
                     self.walls.append(np.array([i, j]))
+                if char in ('W', 'S', 'A', 'D', 'R'):  # R is for random
+                    self.start_position["head"] = np.array([i, j])
+                    self.start_position["direction"] = DIRECTION_WSAD[char]
 
     def _get_obs(self):
         return {"head": self._head_location,
@@ -86,15 +98,15 @@ class SnakeEnv(gym.Env):
         self.num_of_steps = 0
 
     def _reset_snake_position(self):
-        self._head_location = self.np_random.integers(0, self.size, size=2, dtype=int)
+        self._head_location = self.start_position.get("head", self.np_random.integers(0, self.size, size=2, dtype=int))
+        self._head_direction = self.start_position.get("direction", self.np_random.choice(list(DIRECTION.values())))
         while any(np.array_equal(self._head_location, wall) for wall in self.walls):
             self._head_location = self.np_random.integers(0, self.size, size=2, dtype=int)
         self._body_location = []
         self._body_location.append(self._head_location)
-        self._head_direction = DIRECTION["RIGHT"]
 
     def _reset_fruit_position(self):
-        # # sample the target's location randomly until it does not coincide with the snake's body
+        # # sample the target's location randomly until it does not coincide with the snake's body  ### INEFFICIENT!!!
         # self._fruit_location = self._head_location
         # while any(np.array_equal(self._fruit_location, snake_body) for snake_body in self._body_location):
         #     while any(np.array_equal(self._fruit_location, wall) for wall in self.walls):
@@ -169,9 +181,9 @@ class SnakeEnv(gym.Env):
     def calculate_next_location(self, from_location, direction) -> np.array:
         direction_to_arr = {
             DIRECTION["RIGHT"]: np.array([1, 0]),
-            DIRECTION["UP"]: np.array([0, 1]),
+            DIRECTION["UP"]: np.array([0, -1]),
             DIRECTION["LEFT"]: np.array([-1, 0]),
-            DIRECTION["DOWN"]: np.array([0, -1]),
+            DIRECTION["DOWN"]: np.array([0, 1]),
         }
         direction_arr = direction_to_arr[direction]
 

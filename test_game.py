@@ -3,11 +3,11 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    with open('./boards/board_002.txt', 'r') as file:
+    with open('./boards/board_001.txt', 'r') as file:
         board = file.read().splitlines()
 
-    env = SnakeEnv(render_mode="human", import_board=board)
-    # env = SnakeEnv(render_mode="human", size=10)
+    #env = SnakeEnv(render_mode="human", import_board=board)
+    env = SnakeEnv(render_mode="human", size=10)
 
     terminated = False
     truncated = False
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     while not (terminated or truncated):
 
         action = np.random.choice([ACTION["TURN_LEFT"], ACTION["DO_NOTHING"], ACTION["TURN_RIGHT"]])
-        obs, reward, terminated, truncated, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(ACTION["DO_NOTHING"])
         score += reward
 
     print("Score:", score)

@@ -1,5 +1,6 @@
 ### Current stage of development:
 - Creating the environment for RL
+- Testing environment on first reinforcement learning
 
 ### How to run:
 
@@ -13,6 +14,12 @@
 - [X] walls
 - [X] import of board from txt file
 - [X] start position: random
-- [ ] start position: selected
+- [X] start position: selected
 - [ ] limited view
 - [ ] dynamic appearing poisoned fruits
+
+### Description of boards:
+
+- **\'#\'**: means a wall
+- any for letter: **\'W\'**, **\'S\'**, **\'A\'**, **\'D\'**, **\'R\'** means start position of snake. Letters 'wsad' also means the direction, in which 'R' sends for random direction 
+- board must be a square
