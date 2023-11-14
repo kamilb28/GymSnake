@@ -19,7 +19,7 @@ DIRECTION_WSAD = {
     "R": None  # for random
 }
 
-ACTION = {
+ACTION_SPACE = {
     "TURN_LEFT": 0,
     "DO_NOTHING": 1,
     "TURN_RIGHT": 2
@@ -50,7 +50,7 @@ class SnakeEnv(gym.Env):
                 "walls": spaces.Box(0, size - 1, shape=(len(self.walls), 2), dtype=int)
             }
         )
-        self.action_space = spaces.Space([ACTION["TURN_LEFT"], ACTION["DO_NOTHING"], ACTION["TURN_RIGHT"]])
+        self.action_space = spaces.Space([ACTION_SPACE["TURN_LEFT"], ACTION_SPACE["DO_NOTHING"], ACTION_SPACE["TURN_RIGHT"]])
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -126,6 +126,7 @@ class SnakeEnv(gym.Env):
         self._fruit_location = random.choice(valid_positions)
 
     def step(self, action):
+        self.reward = 0
         self.num_of_steps += 1
         self._update_snake_location(action)
 
@@ -167,10 +168,10 @@ class SnakeEnv(gym.Env):
         return False
 
     def change_direction_based_on_action(self, direction, action) -> int:
-        if action != ACTION["DO_NOTHING"]:
-            if action == ACTION["TURN_LEFT"]:
+        if action != ACTION_SPACE["DO_NOTHING"]:
+            if action == ACTION_SPACE["TURN_LEFT"]:
                 direction -= 1
-            elif action == ACTION["TURN_RIGHT"]:
+            elif action == ACTION_SPACE["TURN_RIGHT"]:
                 direction += 1
 
         if direction > 3:

@@ -1,4 +1,5 @@
-from evns.GymSnakeEnv import SnakeEnv, ACTION
+from evns.GymSnakeEnv import SnakeEnv, ACTION_SPACE
+from evns.GymSnakeSimpleObsEnv import SnakeSimpleObsEnv
 import numpy as np
 
 if __name__ == '__main__':
@@ -7,7 +8,8 @@ if __name__ == '__main__':
         board = file.read().splitlines()
 
     #env = SnakeEnv(render_mode="human", import_board=board)
-    env = SnakeEnv(render_mode="human", size=10)
+    env = SnakeSimpleObsEnv(render_mode="human", size=5)
+    env.metadata["render_fps"] = 1  # for faster rendering
 
     terminated = False
     truncated = False
@@ -18,8 +20,9 @@ if __name__ == '__main__':
 
     while not (terminated or truncated):
 
-        action = np.random.choice([ACTION["TURN_LEFT"], ACTION["DO_NOTHING"], ACTION["TURN_RIGHT"]])
-        obs, reward, terminated, truncated, info = env.step(ACTION["DO_NOTHING"])
+        action = np.random.choice(list(ACTION_SPACE.values()))
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(obs)
         score += reward
 
     print("Score:", score)
