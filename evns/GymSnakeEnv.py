@@ -44,9 +44,10 @@ class SnakeEnv(gym.Env):
         self.observation_space = spaces.Space(
             {
                 "head": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                "body": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                "direction": spaces.Box(0, 2, shape=(1,), dtype=int),
+                "body": spaces.Box(0, size - 1, shape=(size, 2), dtype=int),
+                "direction": spaces.Discrete(4),
                 "fruit": spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                "walls": spaces.Box(0, size - 1, shape=(len(self.walls), 2), dtype=int)
             }
         )
         self.action_space = spaces.Space([ACTION["TURN_LEFT"], ACTION["DO_NOTHING"], ACTION["TURN_RIGHT"]])
@@ -72,7 +73,8 @@ class SnakeEnv(gym.Env):
         return {"head": self._head_location,
                 "body": self._body_location,
                 "direction": self._head_direction,
-                "fruit": self._fruit_location}
+                "fruit": self._fruit_location,
+                "walls": self.walls}
 
     def _get_info(self):
         # manhattan distance between snake head and fruit
