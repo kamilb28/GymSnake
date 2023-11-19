@@ -59,50 +59,51 @@ def get_state(observation):
     ]))
 
 
-num_of_episodes = 100000
-eps = 1.  # exploration parameter
+if __name__ == '__main__':
+    num_of_episodes = 100000
+    eps = 1.  # exploration parameter
 
-env = SnakeSimpleObsEnv(render_mode=None, size=10)
-qlearn = Qlearn(alpha=0.1, gamma=0.99)
-
-
-# learning loop
-progress_bar = tqdm(total=num_of_episodes, desc="Learning")
-for episode in range(num_of_episodes):
-    terminated = False
-    truncated = False
-
-    obs, _ = env.reset()
-    state = get_state(obs)
-
-    episodic_reward = 0
-
-    while not (terminated or truncated):
-        if np.random.random() < eps:
-            action = np.random.choice(list(ACTION_SPACE.values()))
-        else:
-            action = qlearn.get_max_action(state)
-
-        obs, reward, terminated, truncated, info = env.step(action)
-        episodic_reward += reward
-
-        state_new = get_state(obs)
-        action_new = qlearn.get_max_action(state)
-        qlearn.update_Q(state, action, state_new, action_new)
-
-        state = state_new
-
-    # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
-    eps = eps - (1.1/num_of_episodes) if eps > 0.05 else 0.05
-
-    # Update progress bar
-    progress_bar.set_postfix(epsilon=f'{eps:.2f}',
-                             reward=f'{episodic_reward}')
-    progress_bar.update(1)
+    env = SnakeSimpleObsEnv(render_mode=None, size=10)
+    qlearn = Qlearn(alpha=0.1, gamma=0.99)
 
 
-env.close()
+    # learning loop
+    progress_bar = tqdm(total=num_of_episodes, desc="Learning")
+    for episode in range(num_of_episodes):
+        terminated = False
+        truncated = False
 
-f = open("learn.pkl", "wb")
-pickle.dump(qlearn.Q, f)
-f.close()
+        obs, _ = env.reset()
+        state = get_state(obs)
+
+        episodic_reward = 0
+
+        while not (terminated or truncated):
+            if np.random.random() < eps:
+                action = np.random.choice(list(ACTION_SPACE.values()))
+            else:
+                action = qlearn.get_max_action(state)
+
+            obs, reward, terminated, truncated, info = env.step(action)
+            episodic_reward += reward
+
+            state_new = get_state(obs)
+            action_new = qlearn.get_max_action(state)
+            qlearn.update_Q(state, action, state_new, action_new)
+
+            state = state_new
+
+        # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
+        eps = eps - (1.1/num_of_episodes) if eps > 0.05 else 0.05
+
+        # Update progress bar
+        progress_bar.set_postfix(epsilon=f'{eps:.2f}',
+                                 reward=f'{episodic_reward}')
+        progress_bar.update(1)
+
+
+    env.close()
+
+    f = open("learn.pkl", "wb")
+    pickle.dump(qlearn.Q, f)
+    f.close()
