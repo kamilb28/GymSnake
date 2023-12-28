@@ -2,10 +2,11 @@ from rl import Qlearn, get_state
 from evns.GymSnakeSimpleObsEnv import SnakeSimpleObsEnv
 import pickle
 
-env = SnakeSimpleObsEnv(render_mode="human", size=10)
-qlearn = Qlearn(alpha=0.1, gamma=0.99)
+env = SnakeSimpleObsEnv(render_mode="human", size=20)
+env.metadata["render_fps"] = 20
+qlearn = Qlearn()
 
-pickle_in = open('learn.pkl', 'rb')
+pickle_in = open('data/231228_0909.pkl', 'rb')
 qlearn.Q = pickle.load(pickle_in)
 
 terminated = False

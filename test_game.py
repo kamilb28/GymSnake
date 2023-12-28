@@ -4,12 +4,11 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    with open('./boards/board_001.txt', 'r') as file:
+    with open('./boards/board_003.txt', 'r') as file:
         board = file.read().splitlines()
 
-    #env = SnakeEnv(render_mode="human", import_board=board)
-    env = SnakeSimpleObsEnv(render_mode="human", size=5)
-    env.metadata["render_fps"] = 1  # for faster rendering
+    env = SnakeSimpleObsEnv(render_mode="human", size=5, import_board=board)
+    env.metadata["render_fps"] = 10  # for faster rendering
 
     terminated = False
     truncated = False

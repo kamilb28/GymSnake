@@ -1,13 +1,17 @@
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from evns.GymSnakeSimpleObsEnv import SnakeSimpleObsEnv
 from evns.GymSnakeEnv import ACTION_SPACE
 import pickle
+import matplotlib.pyplot as plt
+import datetime
+import os
 
 class Qlearn:
     Q = {}
 
-    def __init__(self, alpha, gamma):
+    def __init__(self, alpha=0.01, gamma=0.99):
         self._alpha = alpha
         self._gamma = gamma
         self.fill_Q()
@@ -59,13 +63,23 @@ def get_state(observation):
     ]))
 
 
+# ############# import board ############# #
+board_file_path = os.path.join(os.path.dirname(__file__),
+                               '../../boards/board_000.txt')
+with open(board_file_path, 'r') as file:
+    board = file.read().splitlines()
+# #############              ############# #
+
 if __name__ == '__main__':
-    num_of_episodes = 100000
+    num_of_episodes = 20000
     eps = 1.  # exploration parameter
 
-    env = SnakeSimpleObsEnv(render_mode=None, size=10)
-    qlearn = Qlearn(alpha=0.1, gamma=0.99)
+    episode_rewards = []
+    episode_epsilons = []
 
+    env = SnakeSimpleObsEnv(render_mode=None, import_board=board)
+    env.metadata["render_fps"] = 50  # for faster rendering
+    qlearn = Qlearn(alpha=0.1, gamma=0.99)
 
     # learning loop
     progress_bar = tqdm(total=num_of_episodes, desc="Learning")
@@ -77,7 +91,6 @@ if __name__ == '__main__':
         state = get_state(obs)
 
         episodic_reward = 0
-
         while not (terminated or truncated):
             if np.random.random() < eps:
                 action = np.random.choice(list(ACTION_SPACE.values()))
@@ -93,17 +106,39 @@ if __name__ == '__main__':
 
             state = state_new
 
-        # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
-        eps = eps - (1.1/num_of_episodes) if eps > 0.05 else 0.05
+        episode_rewards.append(episodic_reward)
+        episode_epsilons.append(eps)
 
         # Update progress bar
         progress_bar.set_postfix(epsilon=f'{eps:.2f}',
                                  reward=f'{episodic_reward}')
         progress_bar.update(1)
 
+        # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
+        eps = eps - (2 / num_of_episodes) if eps > 0.01 else 0.01
 
     env.close()
 
-    f = open("learn.pkl", "wb")
+    # save Q
+    date = datetime.datetime.now().strftime("%y%m%d_%H%M")
+    f = open(f"data/{date}.pkl", "wb")
     pickle.dump(qlearn.Q, f)
     f.close()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(episode_rewards)
+    plt.title('Episodic Return')
+    plt.xlabel('Episodes')
+    plt.ylabel('Reward')
+    ax2 = plt.gca().twinx()
+    ax2.plot(episode_epsilons, color='red')
+    ax2.set_ylabel('Epsilon')
+    plt.grid(True)
+    plt.savefig(f"data/{date}.png")
+    plt.show()
+
+    pd.DataFrame({
+        "Episodes": np.array(),
+        "Episodic Return": episode_rewards,
+        "Epsilon": episode_epsilons
+    }).to_csv(f"data/{date}.csv")
