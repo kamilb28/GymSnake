@@ -34,6 +34,11 @@ class SnakeEnv(gym.Env):
     num_of_steps = 0
     terminated = False
     truncated = False
+    death_reward = -100
+    truncated_reward = -100
+    fruit_reward = 10
+    closing_to_reward = 0
+    away_from_reward = -1
 
     def __init__(self, render_mode=None, size=10, import_board=None):
         if import_board is None:
@@ -122,21 +127,30 @@ class SnakeEnv(gym.Env):
                         not any(np.array_equal(position, wall) for wall in self.walls):
                     valid_positions.append(position)
 
+        if len(valid_positions) < 1:
+            self.truncated = True
+            self.terminated = True
+            self.reward += 100
+            return
+
         # Choose a random valid position for the fruit
         self._fruit_location = random.choice(valid_positions)
 
     def step(self, action):
         self.reward = 0
         self.num_of_steps += 1
-        self._update_snake_location(action)
+        self.reward += self._update_snake_location(action)
 
-        if np.array_equal(self._head_location, self._fruit_location):
-            self.reward += 10  # update reward
+        if not self.terminated and np.array_equal(self._head_location, self._fruit_location):
+            self.reward += self.fruit_reward  # update reward
             self.num_of_steps = 0
             self._reset_fruit_position()
 
         # snake going in circles
-        self.truncated = True if self.num_of_steps >= (self.size**2 * 2) else False
+        # self.truncated = True if self.num_of_steps >= (self.size**2 * 2) else False
+        if not self.terminated and self.num_of_steps >= (self.size**2 * 2):
+            self.truncated = True
+            self.reward -= self.truncated_reward
 
         if self.render_mode == "human":
             self._render_frame()
@@ -144,6 +158,8 @@ class SnakeEnv(gym.Env):
         return self._get_obs(), self.reward, self.terminated, self.truncated, self._get_info()
 
     def _update_snake_location(self, action):
+        old_distance_to_fruit = np.linalg.norm(self._head_location - self._fruit_location, ord=1)
+
         self._head_direction = self.change_direction_based_on_action(self._head_direction, action)
 
         self._head_location = self.calculate_next_location(
@@ -158,12 +174,16 @@ class SnakeEnv(gym.Env):
 
         self.terminated = self.check_if_dead()
 
+        new_distance_to_fruit = np.linalg.norm(self._head_location - self._fruit_location, ord=1)
+        return self.closing_to_reward if new_distance_to_fruit < old_distance_to_fruit \
+            else self.away_from_reward
+
     def check_if_dead(self) -> bool:
         if any(np.array_equal(self._head_location, body) for body in self._body_location[1:]):
-            self.reward -= 100
+            self.reward += self.death_reward
             return True
         if any(np.array_equal(self._head_location, wall) for wall in self.walls):
-            self.reward -= 100
+            self.reward += self.death_reward
             return True
         return False
 

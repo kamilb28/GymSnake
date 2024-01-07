@@ -71,13 +71,13 @@ with open(board_file_path, 'r') as file:
 # #############              ############# #
 
 if __name__ == '__main__':
-    num_of_episodes = 20000
+    num_of_episodes = 200
     eps = 1.  # exploration parameter
 
     episode_rewards = []
     episode_epsilons = []
 
-    env = SnakeSimpleObsEnv(render_mode=None, import_board=board)
+    env = SnakeSimpleObsEnv(render_mode=None, size=10)
     env.metadata["render_fps"] = 50  # for faster rendering
     qlearn = Qlearn(alpha=0.1, gamma=0.99)
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         progress_bar.update(1)
 
         # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
-        eps = eps - (2 / num_of_episodes) if eps > 0.01 else 0.01
+        eps = eps - (1.5 / num_of_episodes) if eps > 0.01 else 0.01
 
     env.close()
 
@@ -125,20 +125,35 @@ if __name__ == '__main__':
     pickle.dump(qlearn.Q, f)
     f.close()
 
+    # Calculate mean rewards for every 100 episodes
+    mean_step = num_of_episodes // 10 if num_of_episodes // 10 > 1 else 1
+    mean_rewards = [sum(episode_rewards[i:i + mean_step]) / mean_step for i in range(0, len(episode_rewards), mean_step)]
+
     plt.figure(figsize=(10, 6))
-    plt.plot(episode_rewards)
+
+    # Plot on the primary y-axis
+    reward_line, = plt.plot(episode_rewards, label='Reward')
+    mean_reward_line, = plt.plot(range(0, len(episode_rewards), mean_step), mean_rewards, label='Mean Reward',
+                                 linestyle='--')
     plt.title('Episodic Return')
     plt.xlabel('Episodes')
     plt.ylabel('Reward')
-    ax2 = plt.gca().twinx()
-    ax2.plot(episode_epsilons, color='red')
-    ax2.set_ylabel('Epsilon')
     plt.grid(True)
+
+    # Plot on the secondary y-axis
+    ax2 = plt.gca().twinx()
+    epsilon_line, = ax2.plot(episode_epsilons, color='red', label='Epsilon')
+    ax2.set_ylabel('Epsilon')
+
+    # Create a single legend for all lines
+    plt.legend(handles=[reward_line, mean_reward_line, epsilon_line], labels=['Reward', 'Mean Reward', 'Epsilon'],
+               loc='upper right')
+
     plt.savefig(f"data/{date}.png")
     plt.show()
 
     pd.DataFrame({
-        "Episodes": np.array(),
+        "Episodes": np.arange(1, num_of_episodes+1),
         "Episodic Return": episode_rewards,
         "Epsilon": episode_epsilons
-    }).to_csv(f"data/{date}.csv")
+    }).to_csv(f"data/{date}.csv", index=False)
