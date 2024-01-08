@@ -1,8 +1,3 @@
-### Current stage of development:
-- Creating the environment for RL
-- Creating first Qlearn algorithm (no NN for now)
-- Testing environment on first reinforcement learning
-
 ### How to run:
 
 * simple: run in terminal command: `python3 test_game.py`
