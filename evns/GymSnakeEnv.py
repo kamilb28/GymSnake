@@ -37,7 +37,7 @@ class SnakeEnv(gym.Env):
     death_reward = -100
     truncated_reward = -100
     fruit_reward = 10
-    closing_to_reward = 0
+    closing_to_reward = 1
     away_from_reward = -1
 
     def __init__(self, render_mode=None, size=10, import_board=None):
@@ -102,6 +102,7 @@ class SnakeEnv(gym.Env):
         self.terminated = False
         self.truncated = False
         self.reward = 0
+        self.score = 0
         self.num_of_steps = 0
 
     def _reset_snake_position(self):
@@ -143,6 +144,7 @@ class SnakeEnv(gym.Env):
 
         if not self.terminated and np.array_equal(self._head_location, self._fruit_location):
             self.reward += self.fruit_reward  # update reward
+            self.score += 1
             self.num_of_steps = 0
             self._reset_fruit_position()
 
@@ -297,12 +299,12 @@ class SnakeEnv(gym.Env):
                 width=2,
             )
 
-
         if self.render_mode == "human":
             self.window.blit(canvas, canvas.get_rect())
 
             pygame.event.pump()
             pygame.display.update()
+            print(self.score)
 
             # Check for window close event
             for event in pygame.event.get():

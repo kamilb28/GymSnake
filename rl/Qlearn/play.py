@@ -5,7 +5,7 @@ import os
 
 # ############# import board ############# #
 board_file_path = os.path.join(os.path.dirname(__file__),
-                               '../../boards/board_002.txt')
+                               '../../boards/board_001.txt')
 with open(board_file_path, 'r') as file:
     board = file.read().splitlines()
 # #############              ############# #
@@ -14,7 +14,7 @@ env = SnakeSimpleObsEnv(render_mode="human", import_board=board)
 env.metadata["render_fps"] = 20
 qlearn = Qlearn()
 
-pickle_in = open('data/231229_1235.pkl', 'rb')
+pickle_in = open('data/240108_1253.pkl', 'rb')
 qlearn.Q = pickle.load(pickle_in)
 
 terminated = False

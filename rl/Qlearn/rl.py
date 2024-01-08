@@ -71,10 +71,12 @@ with open(board_file_path, 'r') as file:
 # #############              ############# #
 
 if __name__ == '__main__':
-    num_of_episodes = 200
-    eps = 1.  # exploration parameter
+    num_of_episodes = 500
+    eps, initial_eps = 1., 1.  # exploration parameters
+    decay_rate = -np.log(0.01) / ((num_of_episodes // 6)*5)
 
     episode_rewards = []
+    episode_scores = []
     episode_epsilons = []
 
     env = SnakeSimpleObsEnv(render_mode=None, size=10)
@@ -107,6 +109,7 @@ if __name__ == '__main__':
             state = state_new
 
         episode_rewards.append(episodic_reward)
+        episode_scores.append(env.score)
         episode_epsilons.append(eps)
 
         # Update progress bar
@@ -114,8 +117,8 @@ if __name__ == '__main__':
                                  reward=f'{episodic_reward}')
         progress_bar.update(1)
 
-        # decrease epsilon over time (in halfway selection strategy will be almost entirely greedy)
-        eps = eps - (1.5 / num_of_episodes) if eps > 0.01 else 0.01
+        eps = initial_eps * np.exp(-decay_rate * episode)
+        # eps = eps - (1.5 / num_of_episodes) if eps > 0.01 else 0.01
 
     env.close()
 
@@ -152,8 +155,19 @@ if __name__ == '__main__':
     plt.savefig(f"data/{date}.png")
     plt.show()
 
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(episode_scores)
+    plt.title('Scores')
+    plt.xlabel('Episodes')
+    plt.ylabel('Value')
+    plt.grid(True)
+    plt.savefig(f"data/scores-{date}.png")
+    plt.show()
+
     pd.DataFrame({
         "Episodes": np.arange(1, num_of_episodes+1),
         "Episodic Return": episode_rewards,
+        "Scores": episode_scores,
         "Epsilon": episode_epsilons
     }).to_csv(f"data/{date}.csv", index=False)
