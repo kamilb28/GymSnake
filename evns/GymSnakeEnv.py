@@ -322,3 +322,29 @@ class SnakeEnv(gym.Env):
             pygame.quit()
 
         self.terminated = True
+
+    def game_state_copy(self):
+        return {
+            "size": self.size,
+            "_head_location": self._head_location.copy(),
+            "_body_location": self._body_location.copy(),
+            "_fruit_location": self._fruit_location.copy(),
+            "_head_direction": self._head_direction,
+            "walls": self.walls.copy(),
+            "terminated": self.terminated,
+            "truncated": self.truncated,
+            "reward": self.reward,
+            "score": self.score
+        }
+
+    def game_state_insert(self, params: dict):
+        self.size = params["size"]
+        self._head_location = params["_head_location"]
+        self._body_location = params["_body_location"]
+        self._fruit_location = params["_fruit_location"]
+        self._head_direction = params["_head_direction"]
+        self.walls = params["walls"]
+        self.terminated = params["terminated"]
+        self.truncated = params["truncated"]
+        self.reward = params["reward"]
+        self.score = params["score"]
