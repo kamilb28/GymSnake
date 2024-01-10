@@ -44,7 +44,7 @@ class SnakeSimpleObsEnv(SnakeEnv):
         return np.array([
             (
                     any(np.array_equal(position, body) for body in self._body_location) or
-                    any(np.array_equal(position, body) for body in self.walls)
+                    any(np.array_equal(position, wall) for wall in self.walls)
             ) for position in self._positions_around_head()
         ])
 

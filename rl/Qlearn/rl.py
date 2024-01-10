@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import datetime
 import os
 
+
 class Qlearn:
     Q = {}
 
@@ -73,7 +74,7 @@ with open(board_file_path, 'r') as file:
 if __name__ == '__main__':
     num_of_episodes = 500
     eps, initial_eps = 1., 1.  # exploration parameters
-    decay_rate = -np.log(0.01) / ((num_of_episodes // 6)*5)
+    decay_rate = -np.log(0.05) / ((num_of_episodes // 6) * 5)
 
     episode_rewards = []
     episode_scores = []
@@ -81,7 +82,7 @@ if __name__ == '__main__':
 
     env = SnakeSimpleObsEnv(render_mode=None, size=10)
     env.metadata["render_fps"] = 50  # for faster rendering
-    qlearn = Qlearn(alpha=0.1, gamma=0.99)
+    qlearn = Qlearn(alpha=0.1, gamma=0.95)
 
     # learning loop
     progress_bar = tqdm(total=num_of_episodes, desc="Learning")
@@ -118,7 +119,7 @@ if __name__ == '__main__':
         progress_bar.update(1)
 
         eps = initial_eps * np.exp(-decay_rate * episode)
-        # eps = eps - (1.5 / num_of_episodes) if eps > 0.01 else 0.01
+        #eps = eps - (1.5 / num_of_episodes) if eps > 0.01 else 0.01
 
     env.close()
 

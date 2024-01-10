@@ -25,6 +25,7 @@ ACTION_SPACE = {
     "TURN_RIGHT": 2
 }
 
+
 class SnakeEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 4}
     size = 10  # The size of the square grid
@@ -60,6 +61,7 @@ class SnakeEnv(gym.Env):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
+        self.reward = 0
         self.window = None
         self.clock = None
 
@@ -150,9 +152,9 @@ class SnakeEnv(gym.Env):
 
         # snake going in circles
         # self.truncated = True if self.num_of_steps >= (self.size**2 * 2) else False
-        if not self.terminated and self.num_of_steps >= (self.size**2 * 2):
+        if not self.terminated and self.num_of_steps >= (self.size**2):
             self.truncated = True
-            self.reward -= self.truncated_reward
+            self.reward += self.truncated_reward
 
         if self.render_mode == "human":
             self._render_frame()
@@ -174,20 +176,20 @@ class SnakeEnv(gym.Env):
         if not np.array_equal(self._head_location, self._fruit_location):
             self._body_location.pop()
 
-        self.terminated = self.check_if_dead()
+        self.terminated, reward_from_death = self.check_if_dead()
 
         new_distance_to_fruit = np.linalg.norm(self._head_location - self._fruit_location, ord=1)
-        return self.closing_to_reward if new_distance_to_fruit < old_distance_to_fruit \
+        reward_from_distance = self.closing_to_reward if new_distance_to_fruit < old_distance_to_fruit \
             else self.away_from_reward
 
-    def check_if_dead(self) -> bool:
+        return reward_from_death + reward_from_distance
+
+    def check_if_dead(self) -> (bool, int):
         if any(np.array_equal(self._head_location, body) for body in self._body_location[1:]):
-            self.reward += self.death_reward
-            return True
+            return True, self.death_reward
         if any(np.array_equal(self._head_location, wall) for wall in self.walls):
-            self.reward += self.death_reward
-            return True
-        return False
+            return True, self.death_reward
+        return False, 0
 
     def change_direction_based_on_action(self, direction, action) -> int:
         if action != ACTION_SPACE["DO_NOTHING"]:
@@ -304,7 +306,6 @@ class SnakeEnv(gym.Env):
 
             pygame.event.pump()
             pygame.display.update()
-            print(self.score)
 
             # Check for window close event
             for event in pygame.event.get():
