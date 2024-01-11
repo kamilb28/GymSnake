@@ -4,6 +4,8 @@ import random
 import time
 import os
 import numpy as np
+from tqdm import tqdm
+
 
 class Node:
     def __init__(self, state, action, parent=None):
@@ -37,7 +39,7 @@ class Node:
 
     def best_child(self, c_param=1.4):
         choices_weights = [
-            (child.rewards / child.visits) + c_param * math.sqrt((2 * math.log(self.visits) / child.visits))
+            (child.rewards / child.visits)
             for child in self.children
         ]
         return self.children[choices_weights.index(max(choices_weights))]
@@ -96,22 +98,27 @@ class MCTS:
 
 # ############# import board ############# #
 board_file_path = os.path.join(os.path.dirname(__file__),
-                               '../../boards/board_000.txt')
+                               '../../boards/board_001.txt')
 with open(board_file_path, 'r') as file:
     board = file.read().splitlines()
 # #############              ############# #
 
-env = SnakeEnv(render_mode="human", import_board=board)
-terminated = False
-truncated = False
+env = SnakeEnv(render_mode=None, import_board=board)
+scores = []
+for game in tqdm(range(50)):
+    terminated = False
+    truncated = False
+    _ = env.reset()
 
-_ = env.reset()
-while not (terminated or truncated):
-    action = np.random.choice(list(ACTION_SPACE.values()))
-    #action = qlearn.get_max_action(state)
-    mcts = MCTS(250)
-    act = mcts.choose(env.game_state_copy())
+    while not (terminated or truncated):
+        #action = np.random.choice(list(ACTION_SPACE.values()))
+        mcts = MCTS(50)
+        action = mcts.choose(env.game_state_copy())
 
-    _, _, terminated, truncated, _ = env.step(act)
+        _, _, terminated, truncated, _ = env.step(action)
 
+    print(env.score)
+    scores.append(env.score)
 env.close()
+print(np.mean(scores))
+print(max(scores))

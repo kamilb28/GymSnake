@@ -37,7 +37,7 @@ class SnakeEnv(gym.Env):
     truncated = False
     death_reward = -100
     truncated_reward = -100
-    fruit_reward = 10
+    fruit_reward = 100
     closing_to_reward = 1
     away_from_reward = -1
 
@@ -334,7 +334,8 @@ class SnakeEnv(gym.Env):
             "terminated": self.terminated,
             "truncated": self.truncated,
             "reward": self.reward,
-            "score": self.score
+            "score": self.score,
+            "num_of_steps": self.num_of_steps
         }
 
     def game_state_insert(self, params: dict):
@@ -348,3 +349,4 @@ class SnakeEnv(gym.Env):
         self.truncated = params["truncated"]
         self.reward = params["reward"]
         self.score = params["score"]
+        self.num_of_steps = params["num_of_steps"]
